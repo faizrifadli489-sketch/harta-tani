@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Farm Sim</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+  body { background: #2d3436; color: #dfe6e9; display: flex; flex-direction: column; align-items: center; padding: 12px; min-height: 100vh; }
+  h1 { font-size: 1.2rem; margin-bottom: 8px; }
+  #bar { display: flex; gap: 16px; margin-bottom: 10px; font-size: .95rem; flex-wrap: wrap; justify-content: center; }
+  #bar b { color: #ffeaa7; }
+  #grid { display: grid; grid-template-columns: repeat(6, 52px); grid-auto-rows: 52px; gap: 4px; background: #6b4f2a; padding: 8px; border-radius: 8px; }
+  .plot { border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 26px; cursor: pointer; user-select: none; background: #8d6e45; }
+  .plot:hover { outline: 2px solid #ffeaa7; }
+  .plot.tilled { background: #5d4037; }
+  .plot.growing { background: #33691e; }
+  .plot.ready { background: #f9a825; animation: pulse 1s infinite; }
+  @keyframes pulse { 50% { filter: brightness(1.3); } }
+  #tools { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  .tool { padding: 8px 14px; border: none; border-radius: 6px; background: #636e72; color: #fff; font-size: 1rem; cursor: pointer; }
+  .tool.active { background: #0984e3; }
+  #log { margin-top: 10px; font-size: .85rem; color: #b2bec3; min-height: 20px; text-align: center; }
+</style>
+</head>
+<body>
+<h1>🚜 Farm Sim</h1>
+<div id="bar">💰 <b id="money">50</b> &nbsp; 🌾 <b id="wheat">0</b></div>
+<div id="grid"></div>
+<div id="tools"></div>
+<div id="log"></div>
+
+<script>
+const COLS = 6, ROWS = 4;                // ponytail: grid fix; add size upgrade kalau mau multi-lahan
+const GROW_MS = 8000;                    // waktu tanam -> siap
+const SELL = 8, SEED = 3, TILL_COST = 2; // ekonomi sederhana
+
+const tools = ['bajak', 'tanam', 'panen', 'jual'];
+const toolIcon = { bajak:'⛏️', tanam:'🌱', panen:'🧺', jual:'💰' };
+let active = 'bajak';
+let wheat = 0, money = 50;
+let plots = Array.from({length: COLS*ROWS}, () => ({ state:'grass', t:0 })); // grass|tilled|growing|ready
+
+const $ = id => document.getElementById(id);
+const gridEl = $('grid'), logEl = $('log');
+
+function log(msg){ logEl.textContent = msg; }
+
+function render(){
+  $('money').textContent = money;
+  $('wheat').textContent = wheat;
+  gridEl.innerHTML = '';
+  plots.forEach((p, i) => {
+    const d = document.createElement('div');
+    d.className = 'plot ' + (p.state === 'grass' ? '' : p.state);
+    d.textContent = p.state === 'growing' ? '🌱'
+      : p.state === 'ready' ? '🌾'
+      : p.state === 'tilled' ? '🟫' : '🌿';
+    if (p.state === 'growing') d.title = `siap ${Math.max(0, Math.ceil((p.t - Date.now())/1000))}s`;
+    d.onclick = () => act(i);
+    gridEl.appendChild(d);
+  });
+  document.querySelectorAll('.tool').forEach((b, i) => b.classList.toggle('active', tools[i] === active));
+}
+
+function act(i){
+  const p = plots[i];
+  if (active === 'bajak'){
+    if (p.state !== 'grass') return log('Sudah dibajak / sedang tumbuh.');
+    if (money < TILL_COST) return log('Uang kurang (butuh 💰' + TILL_COST + ').');
+    money -= TILL_COST; p.state = 'tilled';
+    log('Lahan dibajak (💰-' + TILL_COST + ').');
+  } else if (active === 'tanam'){
+    if (p.state !== 'tilled') return log('Bajak dulu lahannya.');
+    if (money < SEED) return log('Uang kurang (butuh 💰' + SEED + ').');
+    money -= SEED; p.state = 'growing'; p.t = Date.now() + GROW_MS;
+    log('Ditanam (💰-' + SEED + ').');
+  } else if (active === 'panen'){
+    if (p.state !== 'ready') return log('Belum siap panen.');
+    p.state = 'grass'; wheat += 2;
+    log('Panen: 🌾+2.');
+  } else if (active === 'jual'){
+    if (wheat === 0) return log('Tidak ada gandum.');
+    money += wheat * SELL;
+    log('Jual ' + wheat + ' 🌾 = 💰+' + wheat * SELL + '.');
+    wheat = 0;
+  }
+  render();
+}
+
+tools.forEach(t => {
+  const b = document.createElement('button');
+  b.className = 'tool';
+  b.textContent = toolIcon[t] + ' ' + t;
+  b.onclick = () => { active = t; render(); };
+  $('tools').appendChild(b);
+});
+
+setInterval(() => {
+  let changed = false;
+  plots.forEach(p => { if (p.state === 'growing' && Date.now() >= p.t){ p.state = 'ready'; changed = true; } });
+  if (changed) render(); else render(); // render terus: update timer growing
+}, 500);
+
+render();</script>
+</body>
+</html>
