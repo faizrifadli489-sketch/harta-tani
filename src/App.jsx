@@ -4,10 +4,6 @@ import { actions, load, save, initialState, plotState, plotProgress, plotCap, in
 
 const CROP_LIST = Object.entries(CROPS)
 
-function Asset({ name, className = '' }) {
-  return <img className={'asset ' + className} src={`/assets/${name}.svg`} alt="" aria-hidden="true" />
-}
-
 function reducer(st, a) {
   if (a.type === 'reset') return initialState()
   if (a.type === 'weather') return { ...st, weather: a.weather }
@@ -76,7 +72,7 @@ export default function App() {
     <div className="app">
       <header className="hud">
         <div className="brand">
-          <Asset name="logo" className="logo" />
+          <span className="logo">🌱</span>
           <div>
             <h1>Harta Tani</h1>
             <div className="lvl">Lv {st.level} · <span className="xpbar"><i style={{ width: Math.min(100, (st.xp / xpNeed) * 100) + '%' }} /></span></div>
@@ -84,7 +80,7 @@ export default function App() {
         </div>
         <div className="pills">
           <div className="pill gold"><span>💰</span><b>{fmt(st.money)}</b></div>
-          <div className="pill"><Asset name={w.asset} className="mini-asset" /><b>{w.name}</b></div>
+          <div className="pill"><span>{w.icon}</span><b>{w.name}</b></div>
           <div className="pill"><span>📦</span><b>{invTotal}/{invRoom}</b></div>
         </div>
       </header>
@@ -135,7 +131,7 @@ export default function App() {
                   disabled={locked}
                   onClick={() => { setSeed(id); setTool('tanam') }}
                 >
-                  <div className="ic"><Asset name={c.asset} /></div>
+                  <div className="ic">{c.icon}</div>
                   <div className="nm">{c.name}</div>
                   <div className="sub">{locked ? `🔒 Lv ${c.unlock}` : `💰${c.seed} → ${fmt(c.sell * c.yield * sellMul(st))}`}</div>
                   <div className="sub dim">{fmtTime(c.grow * 1000)} · +{profit} profit</div>
@@ -150,7 +146,7 @@ export default function App() {
             {invTotal === 0 && <div className="empty">Gudang kosong. Panen dulu.</div>}
             {CROP_LIST.filter(([id]) => st.inv[id]).map(([id, c]) => (
               <button key={id} className="card" onClick={() => dispatch({ type: 'jual', args: [id] })}>
-                <div className="ic"><Asset name={c.asset} /></div>
+                <div className="ic">{c.icon}</div>
                 <div className="nm">{c.name} ×{st.inv[id]}</div>
                 <div className="sub gold">+💰{fmt(Math.round(st.inv[id] * c.sell * sellMul(st)))}</div>
                 <div className="sub dim">tap untuk jual</div>
@@ -179,7 +175,7 @@ export default function App() {
                   disabled={maxed}
                   onClick={() => dispatch({ type: 'beli', args: [k] })}
                 >
-                  <div className="ic"><Asset name={u.asset} /></div>
+                  <div className="ic">{u.icon}</div>
                   <div className="nm">{u.name} <span className="dim">Lv {owned}/{u.max}</span></div>
                   <div className="sub">{u.desc}</div>
                   <div className="sub gold">{maxed ? 'MAX' : `💰${fmt(c)}`}</div>
@@ -193,7 +189,7 @@ export default function App() {
           <div className="stats">
             <div><span>Total panen</span><b>{fmt(st.stats.harvest)}</b></div>
             <div><span>Total pendapatan</span><b>💰{fmt(st.stats.earned)}</b></div>
-            <div><span>Cuaca</span><b className="weather-value"><Asset name={w.asset} className="mini-asset" /> {w.name} (tumbuh ×{w.growth})</b></div>
+            <div><span>Cuaca</span><b>{w.icon} {w.name} (tumbuh ×{w.growth})</b></div>
             <div><span>Bonus jual</span><b>+{Math.round((sellMul(st) - 1) * 100)}%</b></div>
             <button className="danger" onClick={() => { if (confirm('Hapus semua progres?')) dispatch({ type: 'reset' }) }}>Reset progres</button>
           </div>
@@ -221,7 +217,7 @@ function Plot({ p, i, now, onAct }) {
           <span className="prog"><i style={{ width: prog * 100 + '%' }} /></span>
         </>
       )}
-      {s === 'ready' && <span className="em bounce"><Asset name={c.asset} /></span>}
+      {s === 'ready' && <span className="em bounce">{c.icon}</span>}
       {s === 'growing' && <span className="t">{fmtTime(p.start + p.dur - now)}</span>}
     </button>
   )

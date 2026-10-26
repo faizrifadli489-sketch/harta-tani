@@ -121,11 +121,3 @@ h1 { font-size: 15px; letter-spacing: .5px; text-transform: uppercase; }
 
 @media (max-width: 380px) { .plot { font-size: 18px; } .shop { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
-
-/* Farm SVG asset pack */
-.asset { display: block; width: 100%; height: 100%; object-fit: contain; }
-.logo.asset { width: 34px; height: 34px; flex: 0 0 34px; }
-.mini-asset { width: 22px; height: 22px; flex: 0 0 22px; }
-.card .ic { width: 46px; height: 46px; }
-.plot .asset { width: 34px; height: 34px; }
-.weather-value { display: flex; align-items: center; gap: 5px; }
